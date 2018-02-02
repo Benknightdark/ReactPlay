@@ -74,34 +74,60 @@ class App extends Component {
 //es6 button reuse function 
 const Button = ({ onClick, children }) => <button onClick={onClick}>{children}</button>;
 
-class Search extends Component {
-  render() {
-    const { onChange, value, children } = this.props;
-    return (
-      <form>
-        {children}
-        <input type="text" onChange={onChange} value={value} />
-      </form>
-    );
-  }
-}
-class Table extends Component {
-  render() {
-    const { list, searchTerm, RemoveItem } = this.props;
-    return (
-      <div>
-        {list.filter(isSearched(searchTerm)).map(item => (
-          <div key={item.ObjectID}>
-            <Button type="button" onClick={() => RemoveItem(item.ObjectID)}>
-              aa
-            </Button>
-            <span>{item.text}</span>
-            <span>{item.value}</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-}
+// class Search extends Component {
+//   render() {
+//     const { onChange, value, children } = this.props;
+//     return (
+//       <form>
+//         {children}
+//         <input type="text" onChange={onChange} value={value} />
+//       </form>
+//     );
+//   }
+// }
+ const Search = ({ onChange, value, children }) =>  {
+  return (
+    <form>
+      {children}
+      <input type="text" onChange={onChange} value={value} />
+    </form>
+  )
+};
 
+//table component
+// class Table extends Component {
+//   render() {
+//     const { list, searchTerm, RemoveItem } = this.props;
+//     return (
+//       <div>
+//         {list.filter(isSearched(searchTerm)).map(item => (
+//           <div key={item.ObjectID}>
+//             <Button type="button" onClick={() => RemoveItem(item.ObjectID)}>
+//               aa
+//             </Button>
+//             <span>{item.text}</span>
+//             <span>{item.value}</span>
+//           </div>
+//         ))}
+//       </div>
+//     );
+//   }
+// }
+
+//table function
+const Table=({ list, searchTerm, RemoveItem })=>{
+  return (
+    <div>
+      {list.filter(isSearched(searchTerm)).map(item => (
+        <div key={item.ObjectID}>
+          <Button type="button" onClick={() => RemoveItem(item.ObjectID)}>
+            aa
+          </Button>
+          <span>{item.text}</span>
+          <span>{item.value}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 export default App;
