@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import list from "./list";
-import logo from "./logo.svg";
-import "./App.css";
+import { Grid, Row } from "react-bootstrap";
 function isSearched(searchTerm) {
   return function(item) {
     return (
@@ -31,21 +30,27 @@ class App extends Component {
   render() {
     const { list, searchTerm } = this.state;
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to ds1111fdsf</h1>
-        </header>
-        <div className="App-intro">
-          <Search onChange={this.searchValue} value={searchTerm}>
-            search me
-          </Search>
-          <Table
-            list={list}
-            searchTerm={searchTerm}
-            RemoveItem={this.RemoveItem}
-          />
-        </div>
+      <div>
+        <Grid>
+          <Row>
+          <div className="jumbotron">
+            <Search onChange={this.searchValue} value={searchTerm}>
+              search me
+            </Search>
+            </div>
+          </Row>
+          <Row>
+          <div className="jumbotron">
+
+            <Table
+              list={list}
+              searchTerm={searchTerm}
+              RemoveItem={this.RemoveItem}
+            />
+            </div>
+
+          </Row>
+        </Grid>
       </div>
     );
   }
@@ -62,7 +67,7 @@ class App extends Component {
 //   }
 // }
 
-//button reuse function 
+//button reuse function
 // function Button({onClick,children}){
 //   return (
 //     <button onClick={onClick}>
@@ -71,8 +76,10 @@ class App extends Component {
 //   );
 // }
 
-//es6 button reuse function 
-const Button = ({ onClick, children }) => <button onClick={onClick}>{children}</button>;
+//es6 button reuse function
+const Button = ({ onClick, children }) => (
+  <button onClick={onClick}>{children}</button>
+);
 
 // class Search extends Component {
 //   render() {
@@ -85,13 +92,13 @@ const Button = ({ onClick, children }) => <button onClick={onClick}>{children}</
 //     );
 //   }
 // }
- const Search = ({ onChange, value, children }) =>  {
+const Search = ({ onChange, value, children }) => {
   return (
     <form>
       {children}
       <input type="text" onChange={onChange} value={value} />
     </form>
-  )
+  );
 };
 
 //table component
@@ -115,7 +122,7 @@ const Button = ({ onClick, children }) => <button onClick={onClick}>{children}</
 // }
 
 //table function
-const Table=({ list, searchTerm, RemoveItem })=>{
+const Table = ({ list, searchTerm, RemoveItem }) => {
   return (
     <div>
       {list.filter(isSearched(searchTerm)).map(item => (
@@ -128,6 +135,6 @@ const Table=({ list, searchTerm, RemoveItem })=>{
         </div>
       ))}
     </div>
-  )
-}
+  );
+};
 export default App;
