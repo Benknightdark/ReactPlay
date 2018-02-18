@@ -1,52 +1,90 @@
 import React, { Component } from "react";
-import list from "./list";
+//import list from "./list";
 import { Grid, Row, FormGroup } from "react-bootstrap";
+//Web API Parameter
+const DEFAULT_QUERY='Angular';
+const PATH_BASE='http://hn.algolia.com/api/v1';
+const PATH_SEARCH='/search';
+const PARAM_SEARCH='query=';
+// const url=PATH_BASE+PATH_SEARCH+'?'+PARAM_SEARCH+DEFAULT_QUERY;
+const url=`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`
+console.log(url)
 function isSearched(searchTerm) {
   return function(item) {
     return (
-      !searchTerm || item.value.toLowerCase().includes(searchTerm.toLowerCase())
+      !searchTerm || item.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 }
+
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      list: list,
-      searchTerm: ""
+      result: null,
+      searchTerm: DEFAULT_QUERY
     };
     this.RemoveItem = this.RemoveItem.bind(this);
     this.searchValue = this.searchValue.bind(this);
+    this.fetchTopStories=this.fetchTopStories.bind(this);
+    this.setTopStories=this.setTopStories.bind(this);
+    this.onSubmit=this.onSubmit.bind(this);
+  }
+  setTopStories(result){
+    this.setState({result:result})
+  }
+  fetchTopStories(searchTerm){
+    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}`)
+    .then(res=>res.json())
+    .then(result=>this.setTopStories(result))
+    .catch(err=> err);
+  }
+  onSubmit(event){
+    this.fetchTopStories(this.state.searchTerm);
+    event.preventDefault();
+  }
+  componentDidMount(){
+    this.fetchTopStories(this.state.searchTerm);
   }
   RemoveItem(id) {
-    const isNotId = item => item.ObjectID !== id;
-    const UpdatList = this.state.list.filter(isNotId);
-    this.setState({ list: UpdatList });
+    const {result}=this.state;
+    const isNotId = item => item.objectID !== id;
+    const UpdatList = result.hits.filter(isNotId);
+    this.setState({ result: {...result,hits:UpdatList} });
   }
   searchValue(event) {
     this.setState({ searchTerm: event.target.value });
     console.log(event);
   }
   render() {
-    const { list, searchTerm } = this.state;
+    const { result, searchTerm } = this.state;
+ //   if(!result){return null;}
     return (
       <div>
         <Grid>
           <Row>
             <div className="jumbotron">
-              <Search onChange={this.searchValue} value={searchTerm}>
+              <Search 
+              onChange={this.searchValue} 
+              value={searchTerm}
+              onSubmit={this.onSubmit}
+              >
                 search me
               </Search>
             </div>
           </Row>
           <Row>
+          {
+            result&&
             <div className="jumbotron">
-              <Table
-                list={list}
-                searchTerm={searchTerm}
-                RemoveItem={this.RemoveItem}
-              />
-            </div>
+            <Table
+              list={result.hits}
+              searchTerm={searchTerm}
+              RemoveItem={this.RemoveItem}
+            />
+          </div>
+          }
+           
           </Row>
         </Grid>
       </div>
@@ -75,8 +113,8 @@ class App extends Component {
 // }
 
 //es6 button reuse function
-const Button = ({ onClick, children }) => (
-  <button onClick={onClick}>{children}</button>
+const Button = ({ onClick, children,className='' }) => (
+  <button className={className} onClick={onClick}>{children}</button>
 );
 
 // class Search extends Component {
@@ -90,12 +128,12 @@ const Button = ({ onClick, children }) => (
 //     );
 //   }
 // }
-const Search = ({ onChange, value, children }) => {
+const Search = ({ onChange, value, children,onSubmit }) => {
   return (
-    <form>
+    <form onSubmit={onSubmit}>
       <FormGroup>
         <div className="input-group">
-          {children}
+          <h1>{children}</h1><hr style={{border:'2px'}}/>
           <input
             type="text"
             onChange={onChange}
@@ -136,14 +174,18 @@ const Search = ({ onChange, value, children }) => {
 //table function
 const Table = ({ list, searchTerm, RemoveItem }) => {
   return (
-    <div>
-      {list.filter(isSearched(searchTerm)).map(item => (
-        <div key={item.ObjectID}>
-          <Button type="button" onClick={() => RemoveItem(item.ObjectID)}>
-            aa
+    <div className="col-sm-10 col-offset-1">
+      {
+       // list.filter(isSearched(searchTerm)).map(item => (
+        list.map(item => (
+        <div key={item.objectID}>
+          <Button
+          className="btn btn-danger btn-xs"
+
+          type="button" onClick={() => RemoveItem(item.objectID)}>
+            remove
           </Button>
-          <span>{item.text}</span>
-          <span>{item.value}</span>
+          <span>{item.title}</span>
         </div>
       ))}
     </div>
