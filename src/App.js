@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import list from "./list";
-import { Grid, Row } from "react-bootstrap";
+import { Grid, Row, FormGroup } from "react-bootstrap";
 function isSearched(searchTerm) {
   return function(item) {
     return (
@@ -33,22 +33,20 @@ class App extends Component {
       <div>
         <Grid>
           <Row>
-          <div className="jumbotron">
-            <Search onChange={this.searchValue} value={searchTerm}>
-              search me
-            </Search>
+            <div className="jumbotron">
+              <Search onChange={this.searchValue} value={searchTerm}>
+                search me
+              </Search>
             </div>
           </Row>
           <Row>
-          <div className="jumbotron">
-
-            <Table
-              list={list}
-              searchTerm={searchTerm}
-              RemoveItem={this.RemoveItem}
-            />
+            <div className="jumbotron">
+              <Table
+                list={list}
+                searchTerm={searchTerm}
+                RemoveItem={this.RemoveItem}
+              />
             </div>
-
           </Row>
         </Grid>
       </div>
@@ -95,8 +93,22 @@ const Button = ({ onClick, children }) => (
 const Search = ({ onChange, value, children }) => {
   return (
     <form>
-      {children}
-      <input type="text" onChange={onChange} value={value} />
+      <FormGroup>
+        <div className="input-group">
+          {children}
+          <input
+            type="text"
+            onChange={onChange}
+            value={value}
+            className="form-control width100"
+          />
+          <span className="input-group-btn">
+            <button className="btn btn-primary" type="submit">
+              search
+            </button>
+          </span>
+        </div>
+      </FormGroup>
     </form>
   );
 };
