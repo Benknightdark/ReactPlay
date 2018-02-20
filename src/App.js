@@ -1,7 +1,16 @@
 import React, { Component } from "react";
 //import list from "./list";
 import { Grid, Row, FormGroup } from "react-bootstrap";
-import {DEFAULT_QUERY ,DEFAULT_PAGE,DEFAULT_HPP,PATH_BASE,PATH_SEARCH,PARAM_SEARCH ,PARAM_PAGE,PARAM_HPP} from "./constants/index";
+import {
+  DEFAULT_QUERY,
+  DEFAULT_PAGE,
+  DEFAULT_HPP,
+  PATH_BASE,
+  PATH_SEARCH,
+  PARAM_SEARCH,
+  PARAM_PAGE,
+  PARAM_HPP
+} from "./constants/index";
 import PropTypes from "prop-types";
 function isSearched(searchTerm) {
   return function(item) {
@@ -16,8 +25,9 @@ class App extends Component {
     super(props);
     this.state = {
       results: null,
-      searchKey:'',
-      searchTerm: DEFAULT_QUERY
+      searchKey: "",
+      searchTerm: DEFAULT_QUERY,
+      isLoading: false
     };
     this.RemoveItem = this.RemoveItem.bind(this);
     this.searchValue = this.searchValue.bind(this);
@@ -25,18 +35,22 @@ class App extends Component {
     this.setTopStories = this.setTopStories.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
   }
-  checkTopStoriesSearchTerm(searchTerm){
-    return !this.state.results[searchTerm]
+  checkTopStoriesSearchTerm(searchTerm) {
+    return !this.state.results[searchTerm];
   }
   setTopStories(result) {
-    const {hits,page}=result;
-    const {searchKey,results}=this.state
+    const { hits, page } = result;
+    const { searchKey, results } = this.state;
     //const oldHits=page!==0?this.state.result.hits:[];
-    const oldHits=results&&results.searchKey?results[searchKey].hits:[];
-    const updateHits=[...oldHits,...hits]
-    this.setState({ results: {...results,[searchKey]:{hits:updateHits,page} } });
+    const oldHits = results && results.searchKey ? results[searchKey].hits : [];
+    const updateHits = [...oldHits, ...hits];
+    this.setState({
+      results: { ...results, [searchKey]: { hits: updateHits, page } },
+      isLoading: false
+    });
   }
   fetchTopStories(searchTerm, page) {
+    this.setState({ isLoading: true });
     fetch(
       `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`
     )
@@ -45,35 +59,39 @@ class App extends Component {
       .catch(err => err);
   }
   onSubmit(event) {
-    const {searchTerm}=this.state;
-   
-    this.setState({searchKey:searchTerm})
-    if(this.checkTopStoriesSearchTerm(searchTerm)){
+    const { searchTerm } = this.state;
+
+    this.setState({ searchKey: searchTerm });
+    if (this.checkTopStoriesSearchTerm(searchTerm)) {
       this.fetchTopStories(this.state.searchTerm, DEFAULT_PAGE);
     }
-    
+
     event.preventDefault();
   }
   componentDidMount() {
-    const {searchTerm}=this.state;
-    this.setState({searchKey:searchTerm})
+    const { searchTerm } = this.state;
+    this.setState({ searchKey: searchTerm });
     this.fetchTopStories(this.state.searchTerm, DEFAULT_PAGE);
   }
   RemoveItem(id) {
-    const { results,searchKey } = this.state;
-    const {hits,page}=results[searchKey]
+    const { results, searchKey } = this.state;
+    const { hits, page } = results[searchKey];
     //const isNotId = item => item.objectID !== id;
     const UpdatList = hits.filter(item => item.objectID !== id);
-    this.setState({ results: { ...results,[searchKey]:{hits: UpdatList,page}  } });
+    this.setState({
+      results: { ...results, [searchKey]: { hits: UpdatList, page } }
+    });
   }
   searchValue(event) {
     this.setState({ searchTerm: event.target.value });
     console.log(event);
   }
   render() {
-    const { results, searchTerm ,searchKey} = this.state;
-    const page = (results &&results[searchKey] && results[searchKey].page) || 0;
-    const list=(results &&results[searchKey] && results[searchKey].hits) || [];
+    const { results, searchTerm, searchKey, isLoading } = this.state;
+    const page =
+      (results && results[searchKey] && results[searchKey].page) || 0;
+    const list =
+      (results && results[searchKey] && results[searchKey].hits) || [];
     //   if(!result){return null;}
     return (
       <div>
@@ -90,23 +108,25 @@ class App extends Component {
             </div>
           </Row>
           <Row>
-          
-              <div className="jumbotron">
-                <Table
-                  list={list}
-                  searchTerm={searchTerm}
-                  RemoveItem={this.RemoveItem}
-                />
-              </div>
-            
+            <div className="jumbotron">
+              <Table
+                list={list}
+                searchTerm={searchTerm}
+                RemoveItem={this.RemoveItem}
+              />
+            </div>
           </Row>
           <div className="text-center alert">
-            <Button
-              className="btn btn-success"
-              onClick={() => this.fetchTopStories(searchTerm, page + 1)}
-            >
-              Load More
-            </Button>
+            {isLoading ? (
+              <Loading />
+            ) : (
+              <Button
+                className="btn btn-success"
+                onClick={() => this.fetchTopStories(searchTerm, page + 1)}
+              >
+                Load More
+              </Button>
+            )}
           </div>
         </Grid>
       </div>
@@ -140,11 +160,11 @@ const Button = ({ onClick, children, className = "" }) => (
     {children}
   </button>
 );
-Button.prototypes={
-  onCLick:PropTypes.func,
-  className:PropTypes.string,
-  children:PropTypes.node
-}
+Button.prototypes = {
+  onCLick: PropTypes.func,
+  className: PropTypes.string,
+  children: PropTypes.node
+};
 // class Search extends Component {
 //   render() {
 //     const { onChange, value, children } = this.props;
@@ -157,12 +177,12 @@ Button.prototypes={
 //   }
 // }
 class Search extends Component {
-  componentDidMount(){
+  componentDidMount() {
     this.input.focus();
   }
-  render(){
-    const { onChange, value, children, onSubmit }=this.props;
-  
+  render() {
+    const { onChange, value, children, onSubmit } = this.props;
+
     return (
       <form onSubmit={onSubmit}>
         <FormGroup>
@@ -174,7 +194,9 @@ class Search extends Component {
               onChange={onChange}
               value={value}
               className="form-control width100"
-              ref={(node)=>{this.input=node}}
+              ref={node => {
+                this.input = node;
+              }}
             />
             <span className="input-group-btn">
               <button className="btn btn-primary" type="submit">
@@ -186,8 +208,7 @@ class Search extends Component {
       </form>
     );
   }
-  
-};
+}
 
 //table component
 // class Table extends Component {
@@ -229,11 +250,14 @@ const Table = ({ list, searchTerm, RemoveItem }) => {
     </div>
   );
 };
-Table.prototypes={
-  list:PropTypes.arrayOf(PropTypes.shape({
-    objectID:PropTypes.string.isRequired
-  })).isRequired,
-  searchTerm:PropTypes.string.isRequired,
-  RemoveItem:PropTypes.func.isRequired
-}
+Table.prototypes = {
+  list: PropTypes.arrayOf(
+    PropTypes.shape({
+      objectID: PropTypes.string.isRequired
+    })
+  ).isRequired,
+  searchTerm: PropTypes.string.isRequired,
+  RemoveItem: PropTypes.func.isRequired
+};
+const Loading = () => <div>loading ...</div>;
 export default App;
