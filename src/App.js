@@ -4,10 +4,12 @@ import { Grid, Row, FormGroup } from "react-bootstrap";
 //Web API Parameter
 const DEFAULT_QUERY = "Angular";
 const DEFAULT_PAGE = 0;
+const DEFAULT_HPP=100;
 const PATH_BASE = "http://hn.algolia.com/api/v1";
 const PATH_SEARCH = "/search";
 const PARAM_SEARCH = "query=";
 const PARAM_PAGE = "page=";
+const PARAM_HPP="hitsPerPage="
 // const url=PATH_BASE+PATH_SEARCH+'?'+PARAM_SEARCH+DEFAULT_QUERY;
 const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
 console.log(url);
@@ -23,7 +25,8 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      result: null,
+      results: null,
+      searchKey:'',
       searchTerm: DEFAULT_QUERY
     };
     this.RemoveItem = this.RemoveItem.bind(this);
@@ -32,35 +35,55 @@ class App extends Component {
     this.setTopStories = this.setTopStories.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
   }
-  setTopStories(result) {
-    this.setState({ result: result });
+  checkTopStoriesSearchTerm(searchTerm){
+    return !this.state.results[searchTerm]
   }
-  fetchTopStories(searchTerm,page) {
-    fetch(`${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}`)
+  setTopStories(result) {
+    const {hits,page}=result;
+    const {searchKey,results}=this.state
+    //const oldHits=page!==0?this.state.result.hits:[];
+    const oldHits=results&&results.searchKey?results[searchKey].hits:[];
+    const updateHits=[...oldHits,...hits]
+    this.setState({ results: {...results,[searchKey]:{hits:updateHits,page} } });
+  }
+  fetchTopStories(searchTerm, page) {
+    fetch(
+      `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${searchTerm}&${PARAM_PAGE}${page}&${PARAM_HPP}${DEFAULT_HPP}`
+    )
       .then(res => res.json())
       .then(result => this.setTopStories(result))
       .catch(err => err);
   }
   onSubmit(event) {
-    this.fetchTopStories(this.state.searchTerm,DEFAULT_PAGE);
+    const {searchTerm}=this.state;
+   
+    this.setState({searchKey:searchTerm})
+    if(this.checkTopStoriesSearchTerm(searchTerm)){
+      this.fetchTopStories(this.state.searchTerm, DEFAULT_PAGE);
+    }
+    
     event.preventDefault();
   }
   componentDidMount() {
-    this.fetchTopStories(this.state.searchTerm,DEFAULT_PAGE);
+    const {searchTerm}=this.state;
+    this.setState({searchKey:searchTerm})
+    this.fetchTopStories(this.state.searchTerm, DEFAULT_PAGE);
   }
   RemoveItem(id) {
-    const { result } = this.state;
-    const isNotId = item => item.objectID !== id;
-    const UpdatList = result.hits.filter(isNotId);
-    this.setState({ result: { ...result, hits: UpdatList } });
+    const { results,searchKey } = this.state;
+    const {hits,page}=results[searchKey]
+    //const isNotId = item => item.objectID !== id;
+    const UpdatList = hits.filter(item => item.objectID !== id);
+    this.setState({ results: { ...results,[searchKey]:{hits: UpdatList,page}  } });
   }
   searchValue(event) {
     this.setState({ searchTerm: event.target.value });
     console.log(event);
   }
   render() {
-    const { result, searchTerm } = this.state;
-    const page=(result&&result.page)||0;
+    const { results, searchTerm ,searchKey} = this.state;
+    const page = (results &&results[searchKey] && results[searchKey].page) || 0;
+    const list=(results &&results[searchKey] && results[searchKey].hits) || [];
     //   if(!result){return null;}
     return (
       <div>
@@ -77,23 +100,24 @@ class App extends Component {
             </div>
           </Row>
           <Row>
-            {result && (
+          
               <div className="jumbotron">
                 <Table
-                  list={result.hits}
+                  list={list}
                   searchTerm={searchTerm}
                   RemoveItem={this.RemoveItem}
                 />
               </div>
-            )}
-            <div></div>
             
           </Row>
-          <Button 
-            onClick={()=>this.fetchTopStories(searchTerm,page+1)}
+          <div className="text-center alert">
+            <Button
+              className="btn btn-success"
+              onClick={() => this.fetchTopStories(searchTerm, page + 1)}
             >
-            Load More
+              Load More
             </Button>
+          </div>
         </Grid>
       </div>
     );
