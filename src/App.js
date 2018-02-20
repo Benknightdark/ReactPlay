@@ -1,18 +1,8 @@
 import React, { Component } from "react";
 //import list from "./list";
 import { Grid, Row, FormGroup } from "react-bootstrap";
-//Web API Parameter
-const DEFAULT_QUERY = "Angular";
-const DEFAULT_PAGE = 0;
-const DEFAULT_HPP=100;
-const PATH_BASE = "http://hn.algolia.com/api/v1";
-const PATH_SEARCH = "/search";
-const PARAM_SEARCH = "query=";
-const PARAM_PAGE = "page=";
-const PARAM_HPP="hitsPerPage="
-// const url=PATH_BASE+PATH_SEARCH+'?'+PARAM_SEARCH+DEFAULT_QUERY;
-const url = `${PATH_BASE}${PATH_SEARCH}?${PARAM_SEARCH}${DEFAULT_QUERY}`;
-console.log(url);
+import {DEFAULT_QUERY ,DEFAULT_PAGE,DEFAULT_HPP,PATH_BASE,PATH_SEARCH,PARAM_SEARCH ,PARAM_PAGE,PARAM_HPP} from "./constants/index";
+import PropTypes from "prop-types";
 function isSearched(searchTerm) {
   return function(item) {
     return (
@@ -150,7 +140,11 @@ const Button = ({ onClick, children, className = "" }) => (
     {children}
   </button>
 );
-
+Button.prototypes={
+  onCLick:PropTypes.func,
+  className:PropTypes.string,
+  children:PropTypes.node
+}
 // class Search extends Component {
 //   render() {
 //     const { onChange, value, children } = this.props;
@@ -162,28 +156,37 @@ const Button = ({ onClick, children, className = "" }) => (
 //     );
 //   }
 // }
-const Search = ({ onChange, value, children, onSubmit }) => {
-  return (
-    <form onSubmit={onSubmit}>
-      <FormGroup>
-        <div className="input-group">
-          <h1>{children}</h1>
-          <hr style={{ border: "2px" }} />
-          <input
-            type="text"
-            onChange={onChange}
-            value={value}
-            className="form-control width100"
-          />
-          <span className="input-group-btn">
-            <button className="btn btn-primary" type="submit">
-              search
-            </button>
-          </span>
-        </div>
-      </FormGroup>
-    </form>
-  );
+class Search extends Component {
+  componentDidMount(){
+    this.input.focus();
+  }
+  render(){
+    const { onChange, value, children, onSubmit }=this.props;
+  
+    return (
+      <form onSubmit={onSubmit}>
+        <FormGroup>
+          <div className="input-group">
+            <h1>{children}</h1>
+            <hr style={{ border: "2px" }} />
+            <input
+              type="text"
+              onChange={onChange}
+              value={value}
+              className="form-control width100"
+              ref={(node)=>{this.input=node}}
+            />
+            <span className="input-group-btn">
+              <button className="btn btn-primary" type="submit">
+                search
+              </button>
+            </span>
+          </div>
+        </FormGroup>
+      </form>
+    );
+  }
+  
 };
 
 //table component
@@ -226,4 +229,11 @@ const Table = ({ list, searchTerm, RemoveItem }) => {
     </div>
   );
 };
+Table.prototypes={
+  list:PropTypes.arrayOf(PropTypes.shape({
+    objectID:PropTypes.string.isRequired
+  })).isRequired,
+  searchTerm:PropTypes.string.isRequired,
+  RemoveItem:PropTypes.func.isRequired
+}
 export default App;
