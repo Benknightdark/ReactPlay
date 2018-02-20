@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-//import list from "./list";
 import { Grid, Row, FormGroup } from "react-bootstrap";
 import {
   DEFAULT_QUERY,
@@ -11,6 +10,7 @@ import {
   PARAM_PAGE,
   PARAM_HPP
 } from "./constants/index";
+import { sortBy } from "lodash";
 import PropTypes from "prop-types";
 function isSearched(searchTerm) {
   return function(item) {
@@ -19,7 +19,12 @@ function isSearched(searchTerm) {
     );
   };
 }
-
+// Higher Order Component
+const withLoading=(Component)=>({isLoading,...rest})=>isLoading?<Loading/>:<Component {...rest}/>;
+const SORTS={
+  NONE:list=>list,
+  TITLE:list=>sortBy(list,"title")
+}
 class App extends Component {
   constructor(props) {
     super(props);
@@ -27,13 +32,22 @@ class App extends Component {
       results: null,
       searchKey: "",
       searchTerm: DEFAULT_QUERY,
-      isLoading: false
+      isLoading: false,
+      sortKey:"NONE",
+      isSortReverse:false
     };
     this.RemoveItem = this.RemoveItem.bind(this);
     this.searchValue = this.searchValue.bind(this);
     this.fetchTopStories = this.fetchTopStories.bind(this);
     this.setTopStories = this.setTopStories.bind(this);
     this.onSubmit = this.onSubmit.bind(this);
+    this.onSort = this.onSort.bind(this);
+
+  }
+  // sorting functin
+  onSort(sortKey){
+    const isSortReverse=this.state.sortKey===sortKey&& !this.state.isSortReverse;
+    this.setState({sortKey,isSortReverse});
   }
   checkTopStoriesSearchTerm(searchTerm) {
     return !this.state.results[searchTerm];
@@ -87,7 +101,7 @@ class App extends Component {
     console.log(event);
   }
   render() {
-    const { results, searchTerm, searchKey, isLoading } = this.state;
+    const { results, searchTerm, searchKey, isLoading,sortKey,isSortReverse } = this.state;
     const page =
       (results && results[searchKey] && results[searchKey].page) || 0;
     const list =
@@ -111,22 +125,24 @@ class App extends Component {
             <div className="jumbotron">
               <Table
                 list={list}
+                sortKey={sortKey}
+                onSort={this.onSort}
                 searchTerm={searchTerm}
                 RemoveItem={this.RemoveItem}
+                isSortReverse={isSortReverse}
               />
             </div>
           </Row>
           <div className="text-center alert">
-            {isLoading ? (
-              <Loading />
-            ) : (
-              <Button
+         
+              <ButtonWithLoading
+              isLoading={isLoading}
                 className="btn btn-success"
                 onClick={() => this.fetchTopStories(searchTerm, page + 1)}
               >
                 Load More
-              </Button>
-            )}
+              </ButtonWithLoading>
+            
           </div>
         </Grid>
       </div>
@@ -182,7 +198,6 @@ class Search extends Component {
   }
   render() {
     const { onChange, value, children, onSubmit } = this.props;
-
     return (
       <form onSubmit={onSubmit}>
         <FormGroup>
@@ -231,11 +246,22 @@ class Search extends Component {
 // }
 
 //table function
-const Table = ({ list, searchTerm, RemoveItem }) => {
+const Table = ({ list, searchTerm, RemoveItem ,sortKey,onSort,isSortReverse}) => {
+  const sortedList=SORTS[sortKey](list);
+  const reversedSortedList=isSortReverse?sortedList.reverse():sortedList
   return (
     <div className="col-sm-10 col-offset-1">
-      {// list.filter(isSearched(searchTerm)).map(item => (
-      list.map(item => (
+    <div>
+    <Sort sortKey='TITLE' onSort={onSort}>
+    Title
+    </Sort>
+    <Sort sortKey='NONE' onSort={onSort}>
+    NONE
+    </Sort>
+    </div>
+      {
+
+      reversedSortedList.map(item => (
         <div key={item.objectID}>
           <Button
             className="btn btn-danger btn-xs"
@@ -246,18 +272,26 @@ const Table = ({ list, searchTerm, RemoveItem }) => {
           </Button>
           <span>{item.title}</span>
         </div>
-      ))}
+      ))
+    }
     </div>
   );
 };
-Table.prototypes = {
-  list: PropTypes.arrayOf(
-    PropTypes.shape({
-      objectID: PropTypes.string.isRequired
-    })
-  ).isRequired,
-  searchTerm: PropTypes.string.isRequired,
-  RemoveItem: PropTypes.func.isRequired
-};
+// Table.prototypes = {
+//   list: PropTypes.arrayOf(
+//     PropTypes.shape({
+//       objectID: PropTypes.string.isRequired
+//     })
+//   ).isRequired,
+//   searchTerm: PropTypes.string.isRequired,
+//   RemoveItem: PropTypes.func.isRequired
+// };
 const Loading = () => <div>loading ...</div>;
+const ButtonWithLoading=withLoading(Button);
+const Sort=({sortKey,onSort,children})=><button 
+className="btn btn-xs btn-default sortBtn"
+onClick={()=>onSort(sortKey)}
+>
+{children}
+</button>
 export default App;
